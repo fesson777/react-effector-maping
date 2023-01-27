@@ -133,3 +133,20 @@ button.btn-item {
   margin: 0 2px;
   background-color: green;
 }
+
+.orders {
+  margin: 18px 0;
+  padding: 8px 12px;
+  box-shadow: 0 0 4px 1px rgb(138, 138, 138), 4px 4px 8px 1px rgb(112, 110, 110);
+  font-size: 18px;
+  text-transform: lowercase;
+  position: relative;
+  z-index: 100;
+  overflow: visible;
+  background-color: rgb(255, 255, 255);
+}
+
+.orders span {
+  line-height: 30px;
+  text-transform: none;
+}

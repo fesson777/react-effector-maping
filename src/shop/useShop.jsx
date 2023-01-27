@@ -44,7 +44,7 @@ const makeOrderFx = createEffect(async (order) => {
     return Promise.reject({ id: 4 })
   }
 
-  return 'Order is registered!'
+  return order
 })
 
 // ============================================================== store $cart > .on(addItemToCart, removeFromCart).reset(makeOrderFx.doneData)
@@ -126,7 +126,7 @@ guard({
   source: $cart,
   clock: makeOrder,
   filter: $canOrder,
-  target: [makeOrderFx],
+  target: makeOrderFx,
 })
 
 // ============================================================== store $cart - if makeOrderFx.failData === true > removeFromCart.prepend(({ id }) => id)
@@ -155,13 +155,29 @@ forward({
   to: getItemsFx,
 })
 
+const resetOrder = createEvent()
+
+const $order = createStore([])
+  .on(makeOrderFx.doneData, (state, data) => {
+    console.log(data, 'datadatadatadatadatadatadatadatadata')
+    return [...state, data]
+  })
+  .reset(resetOrder)
+
 export default function useShop() {
   const pendingItems = useStore(getItemsFx.pending)
   const pendingMakeOrder = useStore(makeOrderFx.pending)
   const pendingMakeOrderFx = useStore(makeOrderFx.pending)
 
   return {
-    events: { shopOpened, addToCart, addItemToCart, removeFromCart, makeOrder },
+    events: {
+      shopOpened,
+      addToCart,
+      addItemToCart,
+      removeFromCart,
+      makeOrder,
+      resetOrder,
+    },
     store: {
       $cart,
       $items,
@@ -169,6 +185,7 @@ export default function useShop() {
       $orderError,
       $canOrder,
       $total,
+      $order,
     },
     effects: {},
     pending: {
