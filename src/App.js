@@ -1,25 +1,42 @@
-import logo from './logo.svg';
-import './App.css';
+import { useState } from 'react'
+import Counter from './counter/Counter'
+
+import './App.css'
+import Effect from './effect/Effect'
+import Form from './form/Form'
+import useEffectorCounter from './counter/useCounter'
+import Shop from './shop/Shop'
 
 function App() {
+  const [page, setPage] = useState(<Counter />)
+  const {
+    combinedCountStore: { counter },
+  } = useEffectorCounter()
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
+      <h1>Effector</h1>
+      <nav>
+        <button
+          className="variant counter"
+          onClick={() => setPage(<Counter />)}
         >
-          Learn React
-        </a>
-      </header>
+          Counter {counter}
+        </button>
+        <button className="variant" onClick={() => setPage(<Effect />)}>
+          Effect
+        </button>
+        <button className="variant" onClick={() => setPage(<Form />)}>
+          Form
+        </button>
+        <button className="variant advanced" onClick={() => setPage(<Shop />)}>
+          Shop
+        </button>
+      </nav>
+
+      {page}
     </div>
-  );
+  )
 }
 
-export default App;
+export default App
