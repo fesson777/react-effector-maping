@@ -44,7 +44,7 @@ const makeOrderFx = createEffect(async (order) => {
     return Promise.reject({ id: 4 })
   }
 
-  return 'Order is registered!'
+  return order
 })
 
 // ============================================================== store $cart > .on(addItemToCart, removeFromCart).reset(makeOrderFx.doneData)
@@ -104,12 +104,11 @@ const $orderError = createStore('')
   .on(makeOrderFx.done, () => '')
 
 // ============================================================== store $total > for combine store ($canOrder) for guard makeOrderFx && view in Cart
-const $total = $cart.map((cart) =>
+export const $total = $cart.map((cart) =>
   Object.values(cart).reduce((total, item) => {
     return total + item.price * item.count
   }, 0)
 )
-
 // ============================================================== store $cartList > view in Cart (chosen items)
 const $cartList = $cart.map((cart) => Object.values(cart))
 
@@ -126,7 +125,7 @@ guard({
   source: $cart,
   clock: makeOrder,
   filter: $canOrder,
-  target: [makeOrderFx],
+  target: makeOrderFx,
 })
 
 // ============================================================== store $cart - if makeOrderFx.failData === true > removeFromCart.prepend(({ id }) => id)
@@ -155,20 +154,44 @@ forward({
   to: getItemsFx,
 })
 
+export const resetOrder = createEvent()
+
+export const $orders = createStore([])
+  .on(makeOrderFx.doneData, (state, data) => {
+    return [...state, data]
+  })
+  .reset(resetOrder)
+
+export const $totalOrders = $orders.map((order) => {
+  let result = 0
+  order.forEach((ord) => {
+    Object.values(ord).forEach((item) => {
+      result += item.price * item.count
+    })
+  })
+
+  return result
+})
+
 export default function useShop() {
   const pendingItems = useStore(getItemsFx.pending)
   const pendingMakeOrder = useStore(makeOrderFx.pending)
   const pendingMakeOrderFx = useStore(makeOrderFx.pending)
 
   return {
-    events: { shopOpened, addToCart, addItemToCart, removeFromCart, makeOrder },
+    events: {
+      shopOpened,
+      addToCart,
+      addItemToCart,
+      removeFromCart,
+      makeOrder,
+    },
     store: {
       $cart,
       $items,
       $cartList,
       $orderError,
       $canOrder,
-      $total,
     },
     effects: {},
     pending: {

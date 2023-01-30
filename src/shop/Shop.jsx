@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import Cart from './Cart'
 import Menu from './Menu'
+import Orders from './Orders'
 import useShop from './useShop'
 
 export default function Shop() {
@@ -11,11 +12,14 @@ export default function Shop() {
   }, [])
 
   return (
-    <>
-      <div style={{ display: 'flex', fontSize: 14 }}>
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
+      <div style={{ display: 'flex', fontSize: 14, minHeight: 240 }}>
         <Menu />
         <Cart />
       </div>
-    </>
+      <div>
+        <Orders />
+      </div>
+    </div>
   )
 }

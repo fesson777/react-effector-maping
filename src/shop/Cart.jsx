@@ -1,13 +1,13 @@
 import { useList, useStore } from 'effector-react'
 import Item from './Item'
-import useShop from './useShop'
+import useShop, { $total } from './useShop'
 
 export default function Cart() {
   const { store, events, pending } = useShop()
 
   const error = useStore(store.$orderError)
   const canOrder = useStore(store.$canOrder)
-  const total = useStore(store.$total)
+  const total = useStore($total)
 
   const list = useList(store.$cartList, (item) => {
     return (
