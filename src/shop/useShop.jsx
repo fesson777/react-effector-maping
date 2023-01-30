@@ -104,12 +104,11 @@ const $orderError = createStore('')
   .on(makeOrderFx.done, () => '')
 
 // ============================================================== store $total > for combine store ($canOrder) for guard makeOrderFx && view in Cart
-const $total = $cart.map((cart) =>
+export const $total = $cart.map((cart) =>
   Object.values(cart).reduce((total, item) => {
     return total + item.price * item.count
   }, 0)
 )
-
 // ============================================================== store $cartList > view in Cart (chosen items)
 const $cartList = $cart.map((cart) => Object.values(cart))
 
@@ -155,14 +154,24 @@ forward({
   to: getItemsFx,
 })
 
-const resetOrder = createEvent()
+export const resetOrder = createEvent()
 
-const $order = createStore([])
+export const $orders = createStore([])
   .on(makeOrderFx.doneData, (state, data) => {
-    console.log(data, 'datadatadatadatadatadatadatadatadata')
     return [...state, data]
   })
   .reset(resetOrder)
+
+export const $totalOrders = $orders.map((order) => {
+  let result = 0
+  order.forEach((ord) => {
+    Object.values(ord).forEach((item) => {
+      result += item.price * item.count
+    })
+  })
+
+  return result
+})
 
 export default function useShop() {
   const pendingItems = useStore(getItemsFx.pending)
@@ -176,7 +185,6 @@ export default function useShop() {
       addItemToCart,
       removeFromCart,
       makeOrder,
-      resetOrder,
     },
     store: {
       $cart,
@@ -184,8 +192,6 @@ export default function useShop() {
       $cartList,
       $orderError,
       $canOrder,
-      $total,
-      $order,
     },
     effects: {},
     pending: {
