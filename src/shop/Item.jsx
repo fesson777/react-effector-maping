@@ -1,15 +1,15 @@
-import { useStoreMap } from 'effector-react'
-import useShop from './useShop'
+import { useStoreMap, useUnit } from 'effector-react'
+import { $cart, $pending } from './useShop'
 
 export default function Item({ name, price, id, add, remove, disabled }) {
-  const { store, pending } = useShop()
-  const count = useStoreMap(store.$cart, (cart) => cart[id]?.count ?? 0)
+  const pending = useUnit($pending)
+  const count = useStoreMap($cart, (cart) => cart[id]?.count ?? 0)
   return (
     <div
       style={{
         padding: 8,
         backgroundColor: 'orange',
-        opacity: pending.pendingMakeOrderFx || disabled ? 0.4 : 1,
+        opacity: pending || disabled ? 0.4 : 1,
         marginBottom: 4,
         display: 'flex',
         justifyContent: 'space-between',
@@ -21,7 +21,7 @@ export default function Item({ name, price, id, add, remove, disabled }) {
         <button
           onClick={remove}
           className="btn-item"
-          disabled={pending.pendingMakeOrderFx || disabled}
+          disabled={pending || disabled}
         >
           -
         </button>
@@ -29,7 +29,7 @@ export default function Item({ name, price, id, add, remove, disabled }) {
         <button
           onClick={add}
           className="btn-item"
-          disabled={pending.pendingMakeOrderFx || disabled}
+          disabled={pending || disabled}
         >
           +
         </button>
