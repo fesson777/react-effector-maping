@@ -1,16 +1,16 @@
-import { useList } from 'effector-react'
+import { useList, useUnit } from 'effector-react'
 import Item from './Item'
-import useShop from './useShop'
+import { $items, $pending, addToCart, removeFromCart } from './useShop'
 
 export default function Menu() {
-  const { store, events, pending } = useShop()
+  const pending = useUnit($pending)
 
-  const list = useList(store.$items, (item) => {
+  const list = useList($items, (item) => {
     return (
       <Item
         {...item}
-        add={() => events.addToCart(item.id)}
-        remove={() => events.removeFromCart(item.id)}
+        add={() => addToCart(item.id)}
+        remove={() => removeFromCart(item.id)}
       />
     )
   })
@@ -18,7 +18,7 @@ export default function Menu() {
   return (
     <div style={{ display: 'flex', flexFlow: 'column', padding: '6px 12px' }}>
       <h2>Menu</h2>
-      {!pending.pendingItems ? list : 'Loading items ...'}
+      {!pending ? list : 'Loading items ...'}
     </div>
   )
 }

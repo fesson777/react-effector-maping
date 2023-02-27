@@ -1,20 +1,30 @@
-import { useList, useStore } from 'effector-react'
+import { useList, useUnit } from 'effector-react'
 import Item from './Item'
-import useShop, { $total } from './useShop'
+import {
+  $canOrder,
+  $cartList,
+  $orderError,
+  $pendingCart,
+  $total,
+  addToCart,
+  makeOrder,
+  removeFromCart,
+} from './useShop'
 
 export default function Cart() {
-  const { store, events, pending } = useShop()
+  const [error, canOrder, total, pending] = useUnit([
+    $orderError,
+    $canOrder,
+    $total,
+    $pendingCart,
+  ])
 
-  const error = useStore(store.$orderError)
-  const canOrder = useStore(store.$canOrder)
-  const total = useStore($total)
-
-  const list = useList(store.$cartList, (item) => {
+  const list = useList($cartList, (item) => {
     return (
       <Item
         {...item}
-        add={() => events.addToCart(item.id)}
-        remove={() => events.removeFromCart(item.id)}
+        add={() => addToCart(item.id)}
+        remove={() => removeFromCart(item.id)}
       />
     )
   })
@@ -31,9 +41,9 @@ export default function Cart() {
       }}
     >
       <h2>Cart</h2>
-      {!pending.pendingMakeOrder ? list : 'Your order in loading...'}
+      {!pending ? list : 'Your order in loading...'}
       <div>Total: $ {total}</div>
-      <button disabled={!canOrder} onClick={events.makeOrder}>
+      <button disabled={!canOrder} onClick={makeOrder}>
         Make order
       </button>
       <div>{error}</div>

@@ -8,33 +8,28 @@ import {
   restore,
   sample,
 } from 'effector'
-import { useStore } from 'effector-react'
 
-// ============================================================== store $cart > sample > addItemToCart > get from $items
-const addToCart = createEvent()
+//menu scope
+export const addToCart = createEvent()
+export const removeFromCart = createEvent()
 
-// ============================================================== store $cart > .on event> remove item &&
-// ============================================================== && forward > if makeOrderFx.failData > removeFromCart.prepend(({ id }) => id)
-const removeFromCart = createEvent()
-
-// ============================================================== store $items > effect getItemsFx > get base items
-const getItemsFx = createEffect(async () => {
+export const getItemsFx = createEffect(async () => {
   await new Promise((r) => setTimeout(r, 1000))
   return import('./data.json').then((module) => module.default)
 })
 
-// ============================================================== store $Items
-const $items = restore(getItemsFx.doneData, [])
+export const $items = restore(getItemsFx.doneData, [])
 
-// ============================================================== store $cart > sample addItemToCart from event addToCart (args = item.id)
-const addItemToCart = sample({
-  clock: addToCart,
-  source: $items,
-  fn: (items, id) => items.find((item) => item.id === id),
+//shop scope , start app
+export const shopOpened = createEvent()
+
+forward({
+  from: shopOpened,
+  to: getItemsFx,
 })
 
-// ============================================================== store $cart - effect > makeOrderFx - guard with filter (combine > $canOrder)
-const makeOrderFx = createEffect(async (order) => {
+// cart scope
+export const makeOrderFx = createEffect(async (order) => {
   await new Promise((r) => setTimeout(r, 1000))
 
   console.log('ORDER', order)
@@ -47,26 +42,22 @@ const makeOrderFx = createEffect(async (order) => {
   return order
 })
 
-// ============================================================== store $cart > .on(addItemToCart, removeFromCart).reset(makeOrderFx.doneData)
-const $cart = createStore({})
+export const addItemToCart = sample({
+  source: $items,
+  clock: addToCart,
+  fn: (items, id) => items.find((item) => item.id === id),
+})
+
+export const $cart = createStore({})
   .on(addItemToCart, (cart, item) => {
-    if (cart[item.id]) {
-      const cartItem = cart[item.id]
-
-      return {
-        ...cart,
-        [item.id]: {
-          ...cartItem,
-          count: cartItem.count + 1,
-        },
-      }
-    }
-
     return {
       ...cart,
       [item.id]: {
         ...item,
-        count: 1,
+        count:
+          typeof cart[item.id]?.count === 'undefined'
+            ? 1
+            : cart[item.id].count + 1,
       },
     }
   })
@@ -88,14 +79,18 @@ const $cart = createStore({})
   })
   .reset(makeOrderFx.doneData)
 
-// ============================================================== store $items > event shopOpened to init state
-const shopOpened = createEvent()
+export const $minTotal = createStore(150)
 
-// ============================================================== store $minTotal > for combine store ($canOrder) for guard makeOrderFx
-const $minTotal = createStore(150)
+export const makeOrder = createEvent()
 
-// ============================================================== store $orderError > for combine store ($canOrder) for guard makeOrderFx
-const $orderError = createStore('')
+// delete from cart
+forward({
+  from: makeOrderFx.failData,
+  to: removeFromCart.prepend(({ id }) => id),
+})
+
+//errors cart
+export const $orderError = createStore('')
   .on(
     makeOrderFx.failData,
     (_, { id }) =>
@@ -110,14 +105,14 @@ export const $total = $cart.map((cart) =>
   }, 0)
 )
 // ============================================================== store $cartList > view in Cart (chosen items)
-const $cartList = $cart.map((cart) => Object.values(cart))
-
-// ============================================================== store $cart - event makeOrder > guard makeOrderFx
-const makeOrder = createEvent()
+export const $cartList = $cart.map((cart) => Object.values(cart))
 
 // ============================================================== store $canOrder (combine) > guard makeOrderFx > filter
-const $canOrder = combine($total, $minTotal, $orderError, (total, min, error) =>
-  error.length > 0 ? true : total >= min
+export const $canOrder = combine(
+  $total,
+  $minTotal,
+  $orderError,
+  (total, min, error) => (error.length > 0 ? true : total >= min)
 )
 
 // ============================================================== store $cart - guard makeOrderFx > data for makeOrderFx
@@ -126,12 +121,6 @@ guard({
   clock: makeOrder,
   filter: $canOrder,
   target: makeOrderFx,
-})
-
-// ============================================================== store $cart - if makeOrderFx.failData === true > removeFromCart.prepend(({ id }) => id)
-forward({
-  from: makeOrderFx.failData,
-  to: removeFromCart.prepend(({ id }) => id),
 })
 
 // ============================================================== store $items > .on(makeOrderFx.failData) > item.disabled = true (item reject in order)
@@ -147,12 +136,6 @@ $items.on(makeOrderFx.failData, (items, { id }) =>
     return item
   })
 )
-
-// ============================================================== store $items > if event shopOpened > get init state items
-forward({
-  from: shopOpened,
-  to: getItemsFx,
-})
 
 export const resetOrder = createEvent()
 
@@ -172,32 +155,5 @@ export const $totalOrders = $orders.map((order) => {
 
   return result
 })
-
-export default function useShop() {
-  const pendingItems = useStore(getItemsFx.pending)
-  const pendingMakeOrder = useStore(makeOrderFx.pending)
-  const pendingMakeOrderFx = useStore(makeOrderFx.pending)
-
-  return {
-    events: {
-      shopOpened,
-      addToCart,
-      addItemToCart,
-      removeFromCart,
-      makeOrder,
-    },
-    store: {
-      $cart,
-      $items,
-      $cartList,
-      $orderError,
-      $canOrder,
-    },
-    effects: {},
-    pending: {
-      pendingItems,
-      pendingMakeOrder,
-      pendingMakeOrderFx,
-    },
-  }
-}
+export const $pending = restore(getItemsFx.pending, false)
+export const $pendingCart = restore(makeOrderFx.pending, false)

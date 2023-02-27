@@ -1,14 +1,15 @@
+import { useUnit } from 'effector-react'
 import { useEffect } from 'react'
 import Cart from './Cart'
 import Menu from './Menu'
 import Orders from './Orders'
-import useShop from './useShop'
+import { shopOpened } from './useShop'
 
 export default function Shop() {
-  const { events } = useShop()
+  const openShop = useUnit(shopOpened)
 
   useEffect(() => {
-    events.shopOpened() // eslint-disable-next-line
+    openShop() // eslint-disable-next-line
   }, [])
 
   return (
